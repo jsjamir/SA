@@ -1,0 +1,15 @@
+Hi Jasper,
+
+Great job in finishing the GDP workshop manual!
+
+The last exercise that I'll give you will basically combine the first two exercises. You still need to make two python files: client.py and server.py. The client.py will be very similar to the first client.py that you've already made. The difference is that instead of sending the random data using TCP, you will write it in a certain GCL. The server should be able to read the data from the GCL, parse it, and write it again in sensor specific GCLs: ph.edu.upd.pcari.jasper.temp, ph.edu.upd.pcari.jasper.hum, ph.edu.upd.pcari.jasper.batt. The contents of each record in the GCL should be in this format: <8 bytes timestamp in milliseconds since epoch><1 byte client id><2 bytes data>. The server don't need to print the data from the GCLs.
+
+Aside from these similar functions form your previous exercises, we will being adding a control function. The user should be able to type these commands in the server:
+status clients - this lists all client ids who sent data to the server and the last time each client sent a data. Sample output
+status sensors <client_id> - this lists the status (if turned on or not) of the sensors of the client with the given client_id
+stop <client_id> <sensor_id> - the client should stop writing new data to it GCL. The sensor_id field is optional. If a valid value is given, only that sensor will be turned off.
+start <client_id> <sensor_id> - the client should start writing new data to it GCL. The sensor_id field is optional. If a valid value is given, only that sensor will be turned on.
+For this exercise, use the naming convention ph.edu.upd.pcari.jasper.something, where "something" can be anything. Also, instead of using pipes, please use Queues for inter-thread communication. You may also set your own handshaking protocol between the server and the clients, and may also use other GCLs for this purpose. Note that you may not use socket programming for this exercise. I've uploaded a python file in your google drive that may help you (hopefully). :)
+
+Regards,
+Rico

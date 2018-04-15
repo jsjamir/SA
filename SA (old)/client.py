@@ -100,6 +100,7 @@ def float_to_int16(data, (minval, maxval)):
     int16 = float((data - minval)) / (maxval-minval)
     int16 = int16 * 2**16
     return int(int16)
+
 def float_to_int16_list(sorted_data, boundaries):
     offset = len(sorted_data)/2
     for i in range(offset):
@@ -164,7 +165,7 @@ def main():
     print "sent: ", json.dumps(parameters)
 
     while True:
-        time.sleep(.5)
+        time.sleep(2)
         data = get_random_data(parameters)
         encoded_data = encode_data(data, boundaries)
         gcl_handle.append({"data": encoded_data})
