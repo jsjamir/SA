@@ -26,22 +26,30 @@ def new_writerthread_withpipe(sensor_id ):
     return new_w
 def writer(sensor_id, readpipe):
     time.sleep(0.5)
+    gcl_handle_temp = gcl_append_init('ph.edu.upd.pcari.jasper.temp', '_temp.pem')
+    gcl_handle_humid = gcl_append_init('ph.edu.upd.pcari.jasper.humid', '_humid.pem')
+    gcl_handle_batt = gcl_append_init('ph.edu.upd.pcari.jasper.batt', '_batt.pem')
     print "Sensor_id:", sensor_id, "created."
     r = os.fdopen(readpipe,'r',0)
     while True:
+        time.sleep(0.3)
         message = r.readline().rstrip('\n')
-        message = message.split(',')
-        encoded_data = message[0]
-        epoch = message[1]
-        message = message[3:]
-        for i in range(0, len(message), 2):
-            data = epoch + encoded_data[-1] + encoded_data[i:i+2]
-            if message[i] == '1':
-                print "%d >>> temp: [%r] == %s" % ( int(sensor_id), data, message[i+1] )
-            if message[i] == '2':
-                print "%d >>> humid: [%r] == %s" % ( int(sensor_id), data, message[i+1] )
-            if message[i] == '3':
-                print "%d >>> batt: [%r] == %s" % ( int(sensor_id), data, message[i+1] )
+        if len(message) >= 4:
+            message = message.split(',')
+            encoded_data = message[0]
+            epoch = message[1]
+            message = message[3:]
+            for i in range(0, len(message), 2):
+                data = epoch + encoded_data[-1] + encoded_data[i:i+2]
+                if message[i] == '1':
+                    gcl_handle_temp.append({"data": data})
+                    print "%d >>> temp: [%s] == %s" % ( int(sensor_id), data, message[i+1] )
+                if message[i] == '2':
+                    gcl_handle_humid.append({"data": data})
+                    print "%d >>> humid: [%s] == %s" % ( int(sensor_id), data, message[i+1] )
+                if message[i] == '3':
+                    gcl_handle_batt.append({"data": data})
+                    print "%d >>> batt: [%s] == %s" % ( int(sensor_id), data, message[i+1] )
     print "Sensor_id:", sensor_id, "exited."
 def file_write(filename, message):
     f = open(filename, 'a')
@@ -98,6 +106,16 @@ def gcl_subscription_init():
     gcl_name = gdp.GDP_NAME(gcl_input)
     gcl_handle = gdp.GDP_GCL(gcl_name, gdp.GDP_MODE_RO)
     return gcl_handle
+def gcl_append_init(gcl_input, pem_input):
+    gdp.gdp_init()
+    gcl_name = gdp.GDP_NAME(gcl_input)
+    skey = gdp.EP_CRYPTO_KEY(filename=pem_input,
+           keyform=gdp.EP_CRYPTO_KEYFORM_PEM, flags=gdp.EP_CRYPTO_F_SECRET)
+
+    gcl_handle = gdp.GDP_GCL(gcl_name, gdp.GDP_MODE_RA, {"skey":skey})
+    return gcl_handle
+
+
 
 def main():
     #initialize gcl

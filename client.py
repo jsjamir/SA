@@ -139,12 +139,8 @@ def write_config(filename):
     pem_input = r.readline().rstrip('\n')
     r.close
     return gcl_input, pem_input
-def gcl_append_init(config_file):
+def gcl_append_init(gcl_input, pem_input):
     gdp.gdp_init()
-    gcl_input, pem_input = write_config(config_file)
-    print "gcl: [%r]" % gcl_input
-    print "pem: [%r]" % pem_input
-
     gcl_name = gdp.GDP_NAME(gcl_input)
     skey = gdp.EP_CRYPTO_KEY(filename=pem_input,
            keyform=gdp.EP_CRYPTO_KEYFORM_PEM, flags=gdp.EP_CRYPTO_F_SECRET)
@@ -154,7 +150,7 @@ def gcl_append_init(config_file):
 
 def main():
     #Initialize GCL
-    gcl_handle = gcl_append_init("inputs.txt")
+    gcl_handle = gcl_append_init('ph.edu.upd.pcari.jasper.data','_data.pem')
     parameters = arguments()             #parse command line arguments
     parameters = remove_none(parameters) #convert None to 0
     boundaries = get_boundaries(parameters)
@@ -164,7 +160,7 @@ def main():
     print "sent: ", json.dumps(parameters)
 
     while True:
-        time.sleep(.5)
+        time.sleep(5)
         data = get_random_data(parameters)
         encoded_data = encode_data(data, boundaries)
         gcl_handle.append({"data": encoded_data})
