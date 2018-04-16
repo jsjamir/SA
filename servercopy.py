@@ -32,7 +32,105 @@ def control_center_init():
     control.setDaemon(True)
     control.start()
     return q
+def do_commands(q):
+    while not q.empty():
+        command = q.get()
+        #print "[%r]" % command
+        command = command.split(' ')
+        command_ = command[0] + ' ' + command[1]
+        if command_ == 'status clients':
+            print "********************"
+            print "***Status Clients***"
+            print "********************"
+            for i in sensor_id_status:
+                print "client_id: %3d | timestamp: %d" % (i, sensor_id_status[i]['timestamp'])
 
+        if command_ == 'status sensors':
+            if len(command) == 2:
+                print "************************"
+                print "***Status Sensors All***"
+                print "************************"
+                for i in sensor_id_status:
+                    print "client_id:", i
+                    if 1 in sensor_id_status[i]:
+                        print "   temp ON"
+                    else:
+                        print "   temp OFF"
+                    if 2 in sensor_id_status[i]:
+                        print "   humid ON"
+                    else:
+                        print "   humid OFF"
+                    if 3 in sensor_id_status[i]:
+                        print "   batt ON"
+                    else:
+                        print "   batt OFF"
+                    print "********************"
+            else:
+                    print "************************"
+                    print "***Status Sensors One***"
+                    print "************************"
+                    i = int(command[2])
+                    if i in sensor_ids:
+                        print "client_id:", int(command[2])
+                        if 1 in sensor_id_status[i]:
+                            print "   temp ON"
+                        else:
+                            print "   temp OFF"
+                        if 2 in sensor_id_status[i]:
+                            print "   humid ON"
+                        else:
+                            print "   humid OFF"
+                        if 3 in sensor_id_status[i]:
+                            print "   batt ON"
+                        else:
+                            print "   batt OFF"
+                        print "********************"
+
+        if command[0] == 'start':
+            if int(command[1]) in sensor_ids:
+                if len(command) == 2:
+                    print "************************"
+                    print "***Start Sensors All****"
+                    print "************************"
+                    for i in range(1,4):
+                        text = command[0] + ' ' + command[1] + ' ' + str(i)
+                        q.put(text)
+                else:
+                    print "************************"
+                    print "***Start Sensors One***"
+                    print "************************"
+                    print "client_id:", int(command[1])
+                    if int(command[2]) in sensor_id_boundaries[int(command[1])]:
+                        sensor_id_status[ int(command[1])][int(command[2]) ] =  sensor_id_boundaries[ int(command[1]) ][ int(command[2]) ]
+                    #print sensor_id_status[int(command[1])]
+            else:
+                print "Invalid client ID!"
+
+        if command[0] == 'stop':
+            if int(command[1]) in sensor_ids:
+                if len(command) == 2:
+                    print "************************"
+                    print "***Stop Sensors All****"
+                    print "************************"
+                    for i in range(1,4):
+                        if i in sensor_id_status[int(command[1])]:
+                            text = command[0] + ' ' + command[1] + ' ' + str(i)
+                            q.put(text)
+                        #print text
+                    #print "client_id:", int(command[1])
+                    #for i in sensor_id_status[int(command[1])].keys():
+                    #    if i is not 'timestamp':
+                    #        del sensor_id_status[int(command[1])][i]
+                else:
+                    print "************************"
+                    print "***Stop Sensors One***"
+                    print "************************"
+                    print "client_id:", int(command[1])
+                    if int(command[2]) in sensor_id_status[int(command[1])]:
+                        del sensor_id_status[int(command[1])][int(command[2])]
+            else:
+                print "Invalid client ID!"
+        q.task_done()
 def initialize_socket():
     serverSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     serverSock.bind((UDP_IP_ADDRESS, UDP_PORT_NO))
@@ -151,6 +249,7 @@ def main():
     sensor_id_status = {}
     sensor_ids = [] #sensor_id:write_pipe dictionary
     while True:
+        do_commands(q)
         event = gcl_handle.get_next_event(None)
         time_ = event['datum']['ts']['tv_sec']
         time = pack('Q', time_)
@@ -192,105 +291,7 @@ def main():
                 print >>sensor_id_writepipe[sensor_id], message
                 #print sensor_id_boundaries
 
-        ##do commands
-        while not q.empty():
-            command = q.get()
-            #print "[%r]" % command
-            command = command.split(' ')
-            command_ = command[0] + ' ' + command[1]
-            if command_ == 'status clients':
-                print "********************"
-                print "***Status Clients***"
-                print "********************"
-                for i in sensor_id_status:
-                    print "client_id: %3d | timestamp: %d" % (i, sensor_id_status[i]['timestamp'])
 
-            if command_ == 'status sensors':
-                if len(command) == 2:
-                    print "************************"
-                    print "***Status Sensors All***"
-                    print "************************"
-                    for i in sensor_id_status:
-                        print "client_id:", i
-                        if 1 in sensor_id_status[i]:
-                            print "   temp ON"
-                        else:
-                            print "   temp OFF"
-                        if 2 in sensor_id_status[i]:
-                            print "   humid ON"
-                        else:
-                            print "   humid OFF"
-                        if 3 in sensor_id_status[i]:
-                            print "   batt ON"
-                        else:
-                            print "   batt OFF"
-                        print "********************"
-                else:
-                        print "************************"
-                        print "***Status Sensors One***"
-                        print "************************"
-                        i = int(command[2])
-                        if i in sensor_ids:
-                            print "client_id:", int(command[2])
-                            if 1 in sensor_id_status[i]:
-                                print "   temp ON"
-                            else:
-                                print "   temp OFF"
-                            if 2 in sensor_id_status[i]:
-                                print "   humid ON"
-                            else:
-                                print "   humid OFF"
-                            if 3 in sensor_id_status[i]:
-                                print "   batt ON"
-                            else:
-                                print "   batt OFF"
-                            print "********************"
-
-            if command[0] == 'start':
-                if int(command[1]) in sensor_ids:
-                    if len(command) == 2:
-                        print "************************"
-                        print "***Start Sensors All****"
-                        print "************************"
-                        for i in range(1,4):
-                            text = command[0] + ' ' + command[1] + ' ' + str(i)
-                            q.put(text)
-                    else:
-                        print "************************"
-                        print "***Start Sensors One***"
-                        print "************************"
-                        print "client_id:", int(command[1])
-                        if int(command[2]) in sensor_id_boundaries[int(command[1])]:
-                            sensor_id_status[ int(command[1])][int(command[2]) ] =  sensor_id_boundaries[ int(command[1]) ][ int(command[2]) ]
-                        #print sensor_id_status[int(command[1])]
-                else:
-                    print "Invalid client ID!"
-
-            if command[0] == 'stop':
-                if int(command[1]) in sensor_ids:
-                    if len(command) == 2:
-                        print "************************"
-                        print "***Stop Sensors All****"
-                        print "************************"
-                        for i in range(1,4):
-                            if i in sensor_id_status[int(command[1])]:
-                                text = command[0] + ' ' + command[1] + ' ' + str(i)
-                                q.put(text)
-                            #print text
-                        #print "client_id:", int(command[1])
-                        #for i in sensor_id_status[int(command[1])].keys():
-                        #    if i is not 'timestamp':
-                        #        del sensor_id_status[int(command[1])][i]
-                    else:
-                        print "************************"
-                        print "***Stop Sensors One***"
-                        print "************************"
-                        print "client_id:", int(command[1])
-                        if int(command[2]) in sensor_id_status[int(command[1])]:
-                            del sensor_id_status[int(command[1])][int(command[2])]
-                else:
-                    print "Invalid client ID!"
-            q.task_done()
 
 
 if __name__ == '__main__':

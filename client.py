@@ -160,7 +160,7 @@ def main():
     print "sent: ", json.dumps(parameters)
 
     while True:
-        time.sleep(5)
+        time.sleep(2)
         data = get_random_data(parameters)
         encoded_data = encode_data(data, boundaries)
         gcl_handle.append({"data": encoded_data})
